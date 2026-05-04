@@ -24,13 +24,20 @@
     </div>
 
     <div id="ui-container" class="space-y-4">
-      <p class="text-sm text-gray-600 text-left px-1">Silakan masukkan Password Anda:</p>
-      <input type="text" id="nisn" placeholder="Contoh: 001234555" 
-             class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition">
-      <button onclick="cekKelulusan()" id="btn-cek"
-              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition shadow-md hover:shadow-lg">
-        Lihat Hasil
-      </button>
+      <div id="form-input">
+        <p class="text-sm text-gray-600 text-left px-1 mb-2">Silakan masukkan Password Anda:</p>
+        <input type="text" id="nisn" placeholder="Contoh: 001234555" 
+               class="w-full p-4 mb-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition">
+        <button onclick="cekKelulusan()" id="btn-cek"
+                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition shadow-md hover:shadow-lg">
+          Lihat Hasil
+        </button>
+      </div>
+
+      <div id="timer-box" class="hidden py-6">
+        <p class="text-gray-500 text-sm mb-2">Sedang memproses data...</p>
+        <div id="timer" class="text-6xl font-black text-blue-600 animate__animated animate__heartBeat animate__infinite">5</div>
+      </div>
     </div>
 
     <div id="result" class="hidden animate__animated animate__zoomIn">
@@ -54,23 +61,41 @@
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwJuVS6gBGJGsepTgrTkYGD1V57X8vjT7h_o5KQfnqkrffAzLta7QZRN5pvf1vWPmcD/exec";
 
     async function cekKelulusan() {
-      const btn = document.getElementById('btn-cek');
       const nisn = document.getElementById('nisn').value;
-      
+      const formInput = document.getElementById('form-input');
+      const timerBox = document.getElementById('timer-box');
+      const timerDisplay = document.getElementById('timer');
+
       if (!nisn) { alert("Mohon masukkan NISN atau Password Anda."); return; }
 
-      btn.innerText = "Memeriksa...";
-      btn.disabled = true;
-      
+      // 1. Tampilkan Timer
+      formInput.classList.add('hidden');
+      timerBox.classList.remove('hidden');
+
+      // 2. Logika Countdown
+      let count = 5;
+      const countdown = setInterval(() => {
+        count--;
+        timerDisplay.innerText = count;
+        if (count <= 0) clearInterval(countdown);
+      }, 1000);
+
+      // 3. Proses Data setelah 5 detik
       try {
         const response = await fetch(`${SCRIPT_URL}?nisn=${nisn}`);
         const data = await response.json();
 
+        // Tunggu timer selesai (minimal 5 detik)
+        await new Promise(resolve => setTimeout(resolve, 5000));
+
         if (data.status === "closed") {
           alert("Mohon maaf, pengumuman belum dibuka secara resmi. Silakan kembali pukul 18:00 WIB.");
+          location.reload();
         } else if (data.status === "found") {
           document.getElementById('ui-container').classList.add('hidden');
-          document.getElementById('result').classList.remove('hidden');
+          const resultDiv = document.getElementById('result');
+          resultDiv.classList.remove('hidden');
+          
           document.getElementById('nama').innerText = data.nama;
           document.getElementById('jurusan').innerText = data.jurusan;
           
@@ -79,13 +104,12 @@
           statusText.innerText = data.statusLulus;
           statusCard.classList.add(data.statusLulus === "LULUS" ? "bg-green-500" : "bg-red-500");
         } else {
-          alert("Data tidak ditemukan! Pastikan NISN/Password yang Anda masukkan benar.");
+          alert("Data tidak ditemukan!");
+          location.reload();
         }
       } catch (e) {
-        alert("Terjadi kesalahan jaringan. Silakan coba beberapa saat lagi.");
-      } finally {
-        btn.innerText = "Lihat Hasil";
-        btn.disabled = false;
+        alert("Terjadi kesalahan jaringan.");
+        location.reload();
       }
     }
   </script>
