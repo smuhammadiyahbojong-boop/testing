@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pengumuman Kelulusan SMK Muhammadiyah Bojong</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <style>
+    #status-card { transition: background-color 0.5s ease; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+
+  <div class="bg-white p-8 rounded-3xl shadow-2xl w-full max-w-md text-center animate__animated animate__fadeIn relative overflow-hidden">
+    
+    <div class="mb-8">
+      <img src="https://blogger.googleusercontent.com/img/a/AVvXsEgTshrEnQlQMfMvisxBI2hdlTP1nDUk3d4AGdy8oli3JgX-RHbn1n3Cx4xIWKTphG1mjYX1Zq_riXvhtmfBPqEL2GF5qGnL5tUo-3wOG9z32AMHhkzdhLunFKoC2389hie5MscskSAFP5Ci3QW-d5OIMUatba3J59gV5z0JiO5UzFxM67qIfhPPmwGmPVWA" 
+           alt="Logo SMK Muhammadiyah Bojong" 
+           class="mx-auto h-24 w-auto mb-4 animate__animated animate__pulse animate__infinite animate__slow">
+      
+      <h1 class="text-xl font-medium text-gray-600 mb-1">Pengumuman Kelulusan</h1>
+      <h2 class="text-2xl font-bold text-gray-900 mb-1">SMK Muhammadiyah Bojong</h2>
+      <p class="text-sm text-gray-500">Tahun Pelajaran 2025/2026</p>
+    </div>
+
+    <div id="ui-container" class="space-y-4">
+      <p class="text-sm text-gray-600 text-left px-1">Silakan masukkan NISN/Password Anda:</p>
+      <input type="text" id="nisn" placeholder="Contoh: 0012345678" 
+             class="w-full p-4 border-2 border-gray-200 rounded-xl focus:border-blue-500 focus:ring-2 focus:ring-blue-100 outline-none transition">
+      <button onclick="cekKelulusan()" id="btn-cek"
+              class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 rounded-xl transition shadow-md hover:shadow-lg">
+        Lihat Hasil
+      </button>
+    </div>
+
+    <div id="result" class="hidden animate__animated animate__zoomIn">
+      <div class="p-6 bg-gray-50 rounded-2xl mb-5 text-left border border-gray-100">
+        <p class="text-xs text-gray-400 font-bold tracking-widest uppercase mb-2">Identitas Siswa</p>
+        <h2 id="nama" class="text-xl font-bold text-gray-800"></h2>
+        <p id="jurusan" class="text-gray-600"></p>
+      </div>
+      <div id="status-card" class="p-8 rounded-2xl text-white font-black text-4xl shadow-lg mb-6">
+        <p id="status-text"></p>
+      </div>
+      <button onclick="location.reload()" class="text-blue-600 hover:text-blue-800 underline text-sm transition font-medium">
+        Cek NISN/Password lain
+      </button>
+    </div>
+
+    <p class="text-xs text-gray-300 mt-10">© 2026 Panitia Kelulusan SMK Muhammadiyah Bojong</p>
+  </div>
+
+  <script>
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwPK3r5RFbALVLoDsJo0j6ohagYnGhC9xXfSOy7N4hYMhM3M1ra5yeDDAhGQoeGd5zP/exec";
+
+    async function cekKelulusan() {
+      const btn = document.getElementById('btn-cek');
+      const nisn = document.getElementById('nisn').value;
+      
+      if (!nisn) { alert("Mohon masukkan NISN atau Password Anda."); return; }
+
+      btn.innerText = "Memeriksa...";
+      btn.disabled = true;
+      
+      try {
+        const response = await fetch(`${SCRIPT_URL}?nisn=${nisn}`);
+        const data = await response.json();
+
+        if (data.status === "closed") {
+          alert("Mohon maaf, pengumuman belum dibuka secara resmi. Silakan kembali pukul 18:00 WIB.");
+        } else if (data.status === "found") {
+          document.getElementById('ui-container').classList.add('hidden');
+          document.getElementById('result').classList.remove('hidden');
+          document.getElementById('nama').innerText = data.nama;
+          document.getElementById('jurusan').innerText = data.jurusan;
+          
+          const statusCard = document.getElementById('status-card');
+          const statusText = document.getElementById('status-text');
+          statusText.innerText = data.statusLulus;
+          statusCard.classList.add(data.statusLulus === "LULUS" ? "bg-green-500" : "bg-red-500");
+        } else {
+          alert("Data tidak ditemukan! Pastikan NISN/Password yang Anda masukkan benar.");
+        }
+      } catch (e) {
+        alert("Terjadi kesalahan jaringan. Silakan coba beberapa saat lagi.");
+      } finally {
+        btn.innerText = "Lihat Hasil";
+        btn.disabled = false;
+      }
+    }
+  </script>
+</body>
+</html>
